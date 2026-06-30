@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { impactHaptic, ImpactFeedbackStyle } from '../platform/haptics';
@@ -23,10 +22,8 @@ import { BrushPanel } from '../features/brush-tool/BrushPanel';
 import { EnhancePanel } from '../features/enhance/EnhancePanel';
 import { ExportPanel } from '../features/export/ExportPanel';
 import { getDisplayUri } from '../core/types';
+import { useEditorLayout } from '../ui/layout/useEditorLayout';
 import { colors, spacing, typography } from '../ui/theme';
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-const CANVAS_H = SCREEN_H * 0.55;
 
 interface EditorScreenProps {
   onClose: () => void;
@@ -34,6 +31,7 @@ interface EditorScreenProps {
 
 export function EditorScreen({ onClose }: EditorScreenProps) {
   const insets = useSafeAreaInsets();
+  const layout = useEditorLayout();
   const recipe = useEditorStore((s) => s.recipe);
   const currentImage = useEditorStore((s) => s.currentImage);
   const activeTool = useEditorStore((s) => s.activeTool);
@@ -125,10 +123,11 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
         delayLongPress={200}
         style={styles.canvasWrapper}
       >
-        <View style={{ width: SCREEN_W, height: CANVAS_H }}>
+        <View style={{ width: layout.screenWidth, height: layout.canvasHeight }}>
           <ImageCanvas
             uri={getDisplayUri(recipe)}
             recipe={recipe}
+            height={layout.canvasHeight}
             isComparing={isComparing}
             comparePosition={comparePosition}
             onComparePositionChange={setComparePosition}
@@ -136,8 +135,8 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
             showMasks={activeTool === 'mask'}
           />
           <DrawingOverlay
-            width={SCREEN_W}
-            height={CANVAS_H}
+            width={layout.screenWidth}
+            height={layout.canvasHeight}
             enabled={activeTool === 'brush' || activeTool === 'mask'}
             onStrokeUpdate={setLiveStroke}
           />
@@ -151,7 +150,9 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
 
       <HistoryTimeline onScrub={scrubHistory} />
 
-      {renderToolPanel()}
+      <View style={[styles.panelContainer, { maxHeight: layout.panelMaxHeight }]}>
+        {renderToolPanel()}
+      </View>
 
       <BottomToolbar activeTool={activeTool} onToolChange={setActiveTool} />
     </View>
@@ -195,8 +196,11 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   canvasWrapper: {
-    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  panelContainer: {
+    overflow: 'hidden',
   },
   compareBadge: {
     position: 'absolute',
