@@ -7,6 +7,11 @@ export interface PickedImage {
 }
 
 export async function pickImageFromLibrary(): Promise<PickedImage | null> {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (permission.status !== 'granted') {
+    throw new Error('Photo library access is required to import images.');
+  }
+
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: 1,
