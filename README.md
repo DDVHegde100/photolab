@@ -1,6 +1,6 @@
 # PhotoLab
 
-Offline-first, non-destructive photo editing suite for iOS, Android, and Web. Built with **Expo SDK 56**, **React Native 0.85**, **TypeScript**, and **React Native Skia** for GPU-accelerated real-time preview.
+Offline-first, non-destructive photo editing suite for iOS, Android, and Web. Built with **Expo SDK 54**, **React Native 0.81**, **TypeScript**, and **React Native Skia** for GPU-accelerated real-time preview.
 
 No backend. No authentication. No cloud inference. All edits are serialized as JSON recipes; originals are never mutated.
 
@@ -196,7 +196,7 @@ Gallery index cached in AsyncStorage (`@photolab/gallery`).
 
 | Layer | Package |
 |-------|---------|
-| Framework | Expo ~56, React 19, React Native 0.85 |
+| Framework | Expo ~54, React 19, React Native 0.81 |
 | GPU | `@shopify/react-native-skia` 2.6 |
 | Gestures | `react-native-gesture-handler`, `react-native-reanimated` 4.3 |
 | State | Zustand 5 |
@@ -228,7 +228,7 @@ npx tsc --noEmit
 
 ### Expo Go Compatibility
 
-This project targets **SDK 56**. Physical device testing requires Expo Go updated to the matching SDK version, or a development build via `expo run:ios` / `expo run:android`.
+This project targets **SDK 54**, compatible with the current **Expo Go** app from the App Store. Scan the QR code from `npx expo start` to run on a physical device.
 
 ---
 

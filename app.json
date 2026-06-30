@@ -13,8 +13,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "PhotoLab AI needs access to your photos for editing.",
-        "NSPhotoLibraryAddUsageDescription": "PhotoLab AI saves edited photos to your gallery."
+        "NSPhotoLibraryUsageDescription": "PhotoLab needs access to your photos for editing.",
+        "NSPhotoLibraryAddUsageDescription": "PhotoLab saves edited photos to your gallery."
       },
       "bundleIdentifier": "com.dhruvh.photolab-ai"
     },
@@ -42,15 +42,15 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow PhotoLab AI to access your photos.",
-          "savePhotosPermission": "Allow PhotoLab AI to save photos to your gallery.",
+          "photosPermission": "Allow PhotoLab to access your photos.",
+          "savePhotosPermission": "Allow PhotoLab to save photos to your gallery.",
           "isAccessMediaLocationEnabled": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow PhotoLab AI to import photos for editing."
+          "photosPermission": "Allow PhotoLab to import photos for editing."
         }
       ]
     ],
