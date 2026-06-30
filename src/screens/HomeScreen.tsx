@@ -45,9 +45,10 @@ export function HomeScreen({ onOpenEditor }: HomeScreenProps) {
     if (!picked) return;
 
     try {
-      const image = await importImage(picked.uri);
-      image.width = picked.width;
-      image.height = picked.height;
+      const image = await importImage(picked.uri, {
+        width: picked.width,
+        height: picked.height,
+      });
       addImage(image);
     } catch (e) {
       Alert.alert('Import Failed', String(e));

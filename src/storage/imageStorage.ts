@@ -22,7 +22,10 @@ function ensureDirs(): void {
   if (!recipesDir.exists) recipesDir.create();
 }
 
-export async function importImage(sourceUri: string): Promise<GalleryImage> {
+export async function importImage(
+  sourceUri: string,
+  dimensions?: { width: number; height: number }
+): Promise<GalleryImage> {
   ensureDirs();
   const id = uuidv4();
   const ext = sourceUri.split('.').pop()?.split('?')[0] ?? 'jpg';
@@ -35,8 +38,8 @@ export async function importImage(sourceUri: string): Promise<GalleryImage> {
     id,
     uri: destFile.uri,
     thumbnailUri: destFile.uri,
-    width: 0,
-    height: 0,
+    width: dimensions?.width ?? 0,
+    height: dimensions?.height ?? 0,
     createdAt: Date.now(),
   };
 
