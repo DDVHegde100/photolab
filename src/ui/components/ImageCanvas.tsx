@@ -73,6 +73,7 @@ function MaskRegionOverlay({
 interface ImageCanvasProps {
   uri: string;
   recipe: ImageRecipe;
+  height?: number;
   isComparing?: boolean;
   comparePosition?: number;
   onComparePositionChange?: (position: number) => void;
@@ -83,6 +84,7 @@ interface ImageCanvasProps {
 export function ImageCanvas({
   uri,
   recipe,
+  height,
   isComparing = false,
   comparePosition = 0.5,
   onComparePositionChange,
@@ -101,7 +103,7 @@ export function ImageCanvas({
   const renderParams = useMemo(() => computeRenderParams(recipe), [recipe]);
 
   const canvasW = SCREEN_W;
-  const canvasH = SCREEN_H * 0.55;
+  const canvasH = height ?? SCREEN_H * 0.55;
 
   const imgW = image?.width() ?? canvasW;
   const imgH = image?.height() ?? canvasH;
