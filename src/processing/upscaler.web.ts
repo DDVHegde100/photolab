@@ -12,10 +12,10 @@ export interface UpscaleOptions {
   onProgress?: (step: number, total: number, label?: string) => void;
 }
 
-export async function probeImageDimensions(
-  _uri: string
-): Promise<{ width: number; height: number }> {
-  return { width: 0, height: 0 };
+import { probeImageDimensions as probeDims } from './skiaResize.web';
+
+export async function probeImageDimensions(uri: string): Promise<{ width: number; height: number }> {
+  return probeDims(uri);
 }
 
 export async function progressiveUpscale(

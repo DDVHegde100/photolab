@@ -2,19 +2,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import type { GalleryImage, ImageRecipe } from '../core/types';
 import { createRecipe, serializeRecipe, deserializeRecipe } from '../core/editEngine';
+import { probeImageDimensions } from '../processing/skiaResize';
 
 const GALLERY_KEY = '@photolab/gallery';
 const RECIPES_KEY = '@photolab/recipes';
 
-export async function importImage(sourceUri: string): Promise<GalleryImage> {
+export async function importImage(
+  sourceUri: string,
+  dimensions?: { width: number; height: number }
+): Promise<GalleryImage> {
   const id = uuidv4();
+
+  let width = dimensions?.width ?? 0;
+  let height = dimensions?.height ?? 0;
+  if (width <= 0 || height <= 0) {
+    try {
+      const probed = await probeImageDimensions(sourceUri);
+      width = probed.width;
+      height = probed.height;
+    } catch {
+      /* dimensions unavailable */
+    }
+  }
 
   const image: GalleryImage = {
     id,
     uri: sourceUri,
     thumbnailUri: sourceUri,
-    width: 0,
-    height: 0,
+    width,
+    height,
     createdAt: Date.now(),
   };
 

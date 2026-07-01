@@ -1,5 +1,8 @@
+import { loadHTMLImage } from '../rendering/webCanvas.web';
+
 export async function probeImageDimensions(
-  _uri: string
+  uri: string
 ): Promise<{ width: number; height: number }> {
-  return { width: 0, height: 0 };
+  const img = await loadHTMLImage(uri);
+  return { width: img.naturalWidth, height: img.naturalHeight };
 }
