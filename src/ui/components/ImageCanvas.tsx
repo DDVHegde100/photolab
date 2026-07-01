@@ -74,6 +74,7 @@ interface ImageCanvasProps {
   uri: string;
   recipe: ImageRecipe;
   height?: number;
+  showCropOverlay?: boolean;
   isComparing?: boolean;
   comparePosition?: number;
   onComparePositionChange?: (position: number) => void;
@@ -85,6 +86,7 @@ export function ImageCanvas({
   uri,
   recipe,
   height,
+  showCropOverlay = false,
   isComparing = false,
   comparePosition = 0.5,
   onComparePositionChange,
@@ -228,6 +230,34 @@ export function ImageCanvas({
                   drawH={drawH}
                 />
               ))}
+
+            {showCropOverlay && recipe.crop && (
+              <>
+                <Rect
+                  x={offsetX}
+                  y={offsetY}
+                  width={drawW}
+                  height={drawH}
+                  color="rgba(0,0,0,0.5)"
+                />
+                <Rect
+                  x={offsetX + recipe.crop.x * drawW}
+                  y={offsetY + recipe.crop.y * drawH}
+                  width={recipe.crop.width * drawW}
+                  height={recipe.crop.height * drawH}
+                  color="transparent"
+                  style="stroke"
+                  strokeWidth={2}
+                />
+                <Rect
+                  x={offsetX + recipe.crop.x * drawW}
+                  y={offsetY + recipe.crop.y * drawH}
+                  width={recipe.crop.width * drawW}
+                  height={recipe.crop.height * drawH}
+                  color="rgba(255,255,255,0.15)"
+                />
+              </>
+            )}
 
             {isComparing && originalImage && (
               <>
