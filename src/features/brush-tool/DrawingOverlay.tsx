@@ -10,14 +10,24 @@ interface DrawingOverlayProps {
   width: number;
   height: number;
   enabled: boolean;
+  mode?: 'brush' | 'selective';
+  localEditId?: string | null;
   onStrokeUpdate?: (stroke: BrushStroke | null) => void;
 }
 
-export function DrawingOverlay({ width, height, enabled, onStrokeUpdate }: DrawingOverlayProps) {
+export function DrawingOverlay({
+  width,
+  height,
+  enabled,
+  mode = 'brush',
+  localEditId,
+  onStrokeUpdate,
+}: DrawingOverlayProps) {
   const brushSettings = useEditorStore((s) => s.brushSettings);
   const recipe = useEditorStore((s) => s.recipe);
   const addDrawingLayer = useEditorStore((s) => s.addDrawingLayer);
   const addStrokeToLayer = useEditorStore((s) => s.addStrokeToLayer);
+  const addLocalEditStroke = useEditorStore((s) => s.addLocalEditStroke);
   const activeLayerRef = useRef<string | null>(null);
   const currentStrokeRef = useRef<BrushStroke | null>(null);
 
@@ -39,17 +49,17 @@ export function DrawingOverlay({ width, height, enabled, onStrokeUpdate }: Drawi
   const startStroke = useCallback(
     (x: number, y: number) => {
       if (!enabled) return;
-      ensureLayer();
+      if (mode === 'brush') ensureLayer();
       const nx = x / width;
       const ny = y / height;
 
       const stroke: BrushStroke = {
         points: [{ x: nx, y: ny }],
-        size: brushSettings.size,
-        opacity: brushSettings.opacity,
-        hardness: brushSettings.hardness,
-        color: brushSettings.tool === 'eraser' ? '#000000' : brushSettings.color,
-        tool: brushSettings.tool,
+        size: mode === 'selective' ? 48 : brushSettings.size,
+        opacity: mode === 'selective' ? 0.5 : brushSettings.opacity,
+        hardness: mode === 'selective' ? 0.3 : brushSettings.hardness,
+        color: mode === 'selective' ? '#0A84FF' : brushSettings.tool === 'eraser' ? '#000000' : brushSettings.color,
+        tool: 'brush',
         enhancementType: brushSettings.enhancementType,
       };
 
@@ -71,15 +81,22 @@ export function DrawingOverlay({ width, height, enabled, onStrokeUpdate }: Drawi
   );
 
   const endStroke = useCallback(() => {
-    if (currentStrokeRef.current && activeLayerRef.current) {
-      addStrokeToLayer(activeLayerRef.current, {
-        ...currentStrokeRef.current,
-        points: [...currentStrokeRef.current.points],
-      });
+    if (currentStrokeRef.current) {
+      if (mode === 'selective' && localEditId) {
+        addLocalEditStroke(localEditId, {
+          ...currentStrokeRef.current,
+          points: [...currentStrokeRef.current.points],
+        });
+      } else if (activeLayerRef.current) {
+        addStrokeToLayer(activeLayerRef.current, {
+          ...currentStrokeRef.current,
+          points: [...currentStrokeRef.current.points],
+        });
+      }
     }
     currentStrokeRef.current = null;
     onStrokeUpdate?.(null);
-  }, [addStrokeToLayer, onStrokeUpdate]);
+  }, [addStrokeToLayer, addLocalEditStroke, mode, localEditId, onStrokeUpdate]);
 
   const pan = Gesture.Pan()
     .enabled(enabled)
