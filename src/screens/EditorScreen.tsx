@@ -14,6 +14,7 @@ import { saveRecipe } from '../storage/imageStorage';
 import { ImageCanvas } from '../ui/components/ImageCanvas';
 import { BottomToolbar } from '../ui/components/BottomToolbar';
 import { HistoryTimeline } from '../ui/components/HistoryTimeline';
+import { HealTapOverlay } from '../ui/components/HealTapOverlay';
 import { DrawingOverlay } from '../features/brush-tool/DrawingOverlay';
 import { AdjustPanel } from '../features/adjust/AdjustPanel';
 import { CropPanel } from '../features/crop/CropPanel';
@@ -23,6 +24,15 @@ import { EnhancePanel } from '../features/enhance/EnhancePanel';
 import { ExportPanel } from '../features/export/ExportPanel';
 import { FiltersPanel } from '../features/filters/FiltersPanel';
 import { BackgroundPanel } from '../features/background/BackgroundPanel';
+import { UnifiedLayersPanel } from '../features/layers/UnifiedLayersPanel';
+import { EffectsPanel } from '../features/effects/EffectsPanel';
+import { SplitTonePanel } from '../features/split-tone/SplitTonePanel';
+import { SelectivePanel } from '../features/selective/SelectivePanel';
+import { TextPanel } from '../features/text/TextPanel';
+import { TiltShiftPanel } from '../features/focus/TiltShiftPanel';
+import { HealPanel } from '../features/heal/HealPanel';
+import { TransformPanel } from '../features/transform/TransformPanel';
+import { OverlayPanel } from '../features/overlay/OverlayPanel';
 import { getDisplayUri } from '../core/types';
 import { useEditorLayout } from '../ui/layout/useEditorLayout';
 import { colors, spacing, typography } from '../ui/theme';
@@ -37,6 +47,7 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
   const recipe = useEditorStore((s) => s.recipe);
   const currentImage = useEditorStore((s) => s.currentImage);
   const activeTool = useEditorStore((s) => s.activeTool);
+  const activeLocalEditId = useEditorStore((s) => s.activeLocalEditId);
   const isComparing = useEditorStore((s) => s.isComparing);
   const comparePosition = useEditorStore((s) => s.comparePosition);
   const setActiveTool = useEditorStore((s) => s.setActiveTool);
@@ -50,10 +61,16 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
 
   const [, forceUpdate] = useState(0);
   const [liveStroke, setLiveStroke] = useState<import('../core/types').BrushStroke | null>(null);
+  const [healTapMode, setHealTapMode] = useState(false);
+  const [healRadius, setHealRadius] = useState(0.02);
 
   React.useEffect(() => {
     return historyManager.subscribe(() => forceUpdate((n) => n + 1));
   }, []);
+
+  React.useEffect(() => {
+    if (activeTool !== 'heal') setHealTapMode(false);
+  }, [activeTool]);
 
   const handleClose = useCallback(async () => {
     if (recipe) await saveRecipe(recipe);
@@ -76,6 +93,31 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
     switch (activeTool) {
       case 'adjust':
         return <AdjustPanel />;
+      case 'layers':
+        return <UnifiedLayersPanel />;
+      case 'effects':
+        return <EffectsPanel />;
+      case 'tone':
+        return <SplitTonePanel />;
+      case 'selective':
+        return <SelectivePanel />;
+      case 'text':
+        return <TextPanel />;
+      case 'focus':
+        return <TiltShiftPanel />;
+      case 'heal':
+        return (
+          <HealPanel
+            tapMode={healTapMode}
+            onTapModeChange={setHealTapMode}
+            radius={healRadius}
+            onRadiusChange={setHealRadius}
+          />
+        );
+      case 'transform':
+        return <TransformPanel />;
+      case 'overlay':
+        return <OverlayPanel />;
       case 'crop':
         return <CropPanel />;
       case 'mask':
@@ -94,6 +136,11 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
         return <AdjustPanel />;
     }
   };
+
+  const drawingEnabled =
+    activeTool === 'brush' ||
+    activeTool === 'mask' ||
+    activeTool === 'selective';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -141,12 +188,21 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
             liveStroke={liveStroke}
             showMasks={activeTool === 'mask'}
             showCropOverlay={activeTool === 'crop'}
+            showHealSpots={activeTool === 'heal'}
           />
           <DrawingOverlay
             width={layout.screenWidth}
             height={layout.canvasHeight}
-            enabled={activeTool === 'brush' || activeTool === 'mask'}
+            enabled={drawingEnabled}
+            mode={activeTool === 'selective' ? 'selective' : 'brush'}
+            localEditId={activeLocalEditId}
             onStrokeUpdate={setLiveStroke}
+          />
+          <HealTapOverlay
+            width={layout.screenWidth}
+            height={layout.canvasHeight}
+            enabled={healTapMode && activeTool === 'heal'}
+            radius={healRadius}
           />
         </View>
         {isComparing && (

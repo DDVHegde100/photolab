@@ -8,12 +8,20 @@ import type { EditorTool } from '../../core/types';
 
 const TOOLS: { id: EditorTool; label: string; icon: string }[] = [
   { id: 'adjust', label: 'Adjust', icon: '☀️' },
+  { id: 'layers', label: 'Layers', icon: '📚' },
   { id: 'filters', label: 'Filters', icon: '🎭' },
-  { id: 'crop', label: 'Crop', icon: '⬜' },
-  { id: 'background', label: 'BG', icon: '🖼' },
+  { id: 'effects', label: 'FX', icon: '✨' },
+  { id: 'tone', label: 'Tone', icon: '🎨' },
+  { id: 'selective', label: 'Local', icon: '🎯' },
+  { id: 'text', label: 'Text', icon: 'T' },
+  { id: 'focus', label: 'Focus', icon: '◎' },
+  { id: 'heal', label: 'Heal', icon: '💫' },
+  { id: 'transform', label: 'Skew', icon: '⬡' },
+  { id: 'overlay', label: 'Blend', icon: '🖼' },
+  { id: 'background', label: 'BG', icon: '🌄' },
   { id: 'enhance', label: 'Enhance', icon: '✦' },
+  { id: 'crop', label: 'Crop', icon: '⬜' },
   { id: 'brush', label: 'Brush', icon: '✏️' },
-  { id: 'mask', label: 'Mask', icon: '◎' },
   { id: 'export', label: 'Export', icon: '↗' },
 ];
 
