@@ -21,6 +21,8 @@ import { MaskPanel } from '../features/mask-tool/MaskPanel';
 import { BrushPanel } from '../features/brush-tool/BrushPanel';
 import { EnhancePanel } from '../features/enhance/EnhancePanel';
 import { ExportPanel } from '../features/export/ExportPanel';
+import { FiltersPanel } from '../features/filters/FiltersPanel';
+import { BackgroundPanel } from '../features/background/BackgroundPanel';
 import { getDisplayUri } from '../core/types';
 import { useEditorLayout } from '../ui/layout/useEditorLayout';
 import { colors, spacing, typography } from '../ui/theme';
@@ -82,6 +84,10 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
         return <BrushPanel />;
       case 'enhance':
         return <EnhancePanel />;
+      case 'filters':
+        return <FiltersPanel />;
+      case 'background':
+        return <BackgroundPanel />;
       case 'export':
         return <ExportPanel />;
       default:
@@ -96,22 +102,23 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
           <Text style={styles.topBtnText}>←</Text>
         </TouchableOpacity>
 
+        <Text style={styles.titleLabel}>Edit</Text>
         <View style={styles.topActions}>
           <TouchableOpacity
             onPress={undo}
             disabled={!historyManager.canUndo()}
             style={[styles.topBtn, !historyManager.canUndo() && styles.disabled]}
           >
-            <Text style={styles.topBtnText}>↩</Text>
+            <Text style={styles.topBtnText}>Undo</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={redo}
             disabled={!historyManager.canRedo()}
             style={[styles.topBtn, !historyManager.canRedo() && styles.disabled]}
           >
-            <Text style={styles.topBtnText}>↪</Text>
+            <Text style={styles.topBtnText}>Redo</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={resetAll} style={styles.topBtn}>
+          <TouchableOpacity onPress={resetAll} style={styles.resetBtn}>
             <Text style={styles.resetText}>Reset</Text>
           </TouchableOpacity>
         </View>
@@ -133,6 +140,7 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
             onComparePositionChange={setComparePosition}
             liveStroke={liveStroke}
             showMasks={activeTool === 'mask'}
+            showCropOverlay={activeTool === 'crop'}
           />
           <DrawingOverlay
             width={layout.screenWidth}
@@ -177,16 +185,34 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   topBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    paddingHorizontal: spacing.md,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.surfaceElevated,
     justifyContent: 'center',
     alignItems: 'center',
   },
   topBtnText: {
-    fontSize: 18,
+    ...typography.caption,
     color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  titleLabel: {
+    ...typography.subtitle,
+    color: colors.textPrimary,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    pointerEvents: 'none',
+  },
+  resetBtn: {
+    paddingHorizontal: spacing.md,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceElevated,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   resetText: {
     ...typography.caption,
