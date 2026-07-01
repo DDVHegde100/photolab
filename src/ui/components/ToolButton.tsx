@@ -18,11 +18,12 @@ export function ToolButton({ label, icon, active, onPress }: ToolButtonProps) {
         impactHaptic(ImpactFeedbackStyle.Light);
         onPress();
       }}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
     >
-      <Text style={[styles.icon, active && styles.iconActive]}>{icon}</Text>
+      <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
+        <Text style={[styles.icon, active && styles.iconActive]}>{icon}</Text>
+      </View>
       <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
-      {active && <View style={styles.indicator} />}
     </TouchableOpacity>
   );
 }
@@ -32,15 +33,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minWidth: 64,
-    position: 'relative',
+    paddingHorizontal: spacing.sm,
+    minWidth: 58,
   },
   buttonActive: {},
-  icon: {
-    fontSize: 22,
+  iconWrap: {
+    width: 44,
+    height: 32,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.xs,
-    opacity: 0.5,
+  },
+  iconWrapActive: {
+    backgroundColor: colors.accentGlow,
+  },
+  icon: {
+    fontSize: 20,
+    opacity: 0.55,
   },
   iconActive: {
     opacity: 1,
@@ -48,17 +58,9 @@ const styles = StyleSheet.create({
   label: {
     ...typography.micro,
     color: colors.toolInactive,
-    textTransform: 'uppercase',
   },
   labelActive: {
     color: colors.toolActive,
-  },
-  indicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 20,
-    height: 2,
-    backgroundColor: colors.accent,
-    borderRadius: radius.full,
+    fontWeight: '600',
   },
 });
