@@ -14,6 +14,15 @@ import type {
   ColorGrade,
   CurveData,
   BackgroundLayer,
+  AdjustmentLayer,
+  FinishingEffects,
+  SplitTone,
+  LocalEditLayer,
+  TextLayer,
+  TiltShift,
+  HealSpot,
+  PerspectiveCorrection,
+  OverlayImageLayer,
 } from './types';
 import { createRecipe, updateAdjustments, resetAdjustments } from './editEngine';
 import { historyManager } from './historyManager';
@@ -25,6 +34,7 @@ interface EditorState {
   recipe: ImageRecipe | null;
   activeTool: EditorTool;
   activeSubPanel: string | null;
+  activeLocalEditId: string | null;
   isComparing: boolean;
   comparePosition: number;
   isLoading: boolean;
@@ -49,6 +59,7 @@ interface EditorState {
   closeEditor: () => void;
   setActiveTool: (tool: EditorTool) => void;
   setActiveSubPanel: (panel: string | null) => void;
+  setActiveLocalEditId: (id: string | null) => void;
   setComparing: (comparing: boolean) => void;
   setComparePosition: (position: number) => void;
 
@@ -62,6 +73,25 @@ interface EditorState {
   setFilterIntensity: (intensity: number) => void;
   applyPreset: (adjustments: Partial<AdjustmentValues>, filterId?: string) => void;
   setBackground: (background: BackgroundLayer | null) => void;
+  addAdjustmentLayer: (layer: AdjustmentLayer) => void;
+  updateAdjustmentLayer: (id: string, updates: Partial<AdjustmentLayer>) => void;
+  removeAdjustmentLayer: (id: string) => void;
+  toggleAdjustmentLayer: (id: string) => void;
+  setFinishing: (finishing: FinishingEffects) => void;
+  setSplitTone: (splitTone: SplitTone) => void;
+  addLocalEdit: (layer: LocalEditLayer) => void;
+  updateLocalEdit: (id: string, updates: Partial<LocalEditLayer>) => void;
+  addLocalEditStroke: (id: string, stroke: BrushStroke) => void;
+  addTextLayer: (layer: TextLayer) => void;
+  updateTextLayer: (id: string, updates: Partial<TextLayer>) => void;
+  removeTextLayer: (id: string) => void;
+  setTiltShift: (tiltShift: TiltShift) => void;
+  addHealSpot: (spot: HealSpot) => void;
+  applyHealSpots: (result: { uri: string; width: number; height: number }) => void;
+  setPerspective: (perspective: PerspectiveCorrection) => void;
+  addOverlayLayer: (layer: OverlayImageLayer) => void;
+  updateOverlayLayer: (id: string, updates: Partial<OverlayImageLayer>) => void;
+  removeOverlayLayer: (id: string) => void;
   resetAll: () => void;
 
   addMask: (mask: MaskData) => void;
@@ -91,6 +121,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   recipe: null,
   activeTool: 'adjust',
   activeSubPanel: 'basic',
+  activeLocalEditId: null,
   isComparing: false,
   comparePosition: 0.5,
   isLoading: false,
@@ -127,6 +158,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setActiveTool: (tool) => set({ activeTool: tool, activeSubPanel: null }),
   setActiveSubPanel: (panel) => set({ activeSubPanel: panel }),
+  setActiveLocalEditId: (id) => set({ activeLocalEditId: id }),
   setComparing: (comparing) => set({ isComparing: comparing }),
   setComparePosition: (position) => set({ comparePosition: position }),
 
@@ -211,6 +243,232 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (!recipe) return;
     const updated = { ...recipe, background, updatedAt: Date.now() };
     pushHistory('Background', updated);
+    set({ recipe: updated });
+  },
+
+  addAdjustmentLayer: (layer) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      adjustmentLayers: [...recipe.adjustmentLayers, layer],
+      updatedAt: Date.now(),
+    };
+    pushHistory(`Layer: ${layer.name}`, updated);
+    set({ recipe: updated });
+  },
+
+  updateAdjustmentLayer: (id, updates) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      adjustmentLayers: recipe.adjustmentLayers.map((l) =>
+        l.id === id ? { ...l, ...updates } : l
+      ),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Update layer', updated);
+    set({ recipe: updated });
+  },
+
+  removeAdjustmentLayer: (id) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      adjustmentLayers: recipe.adjustmentLayers.filter((l) => l.id !== id),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Remove layer', updated);
+    set({ recipe: updated });
+  },
+
+  toggleAdjustmentLayer: (id) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      adjustmentLayers: recipe.adjustmentLayers.map((l) =>
+        l.id === id ? { ...l, visible: !l.visible } : l
+      ),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Toggle layer', updated);
+    set({ recipe: updated });
+  },
+
+  setFinishing: (finishing) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, finishing, updatedAt: Date.now() };
+    pushHistory('Finishing effects', updated);
+    set({ recipe: updated });
+  },
+
+  setSplitTone: (splitTone) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, splitTone, updatedAt: Date.now() };
+    pushHistory('Split tone', updated);
+    set({ recipe: updated });
+  },
+
+  addLocalEdit: (layer) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      localEdits: [...recipe.localEdits, layer],
+      updatedAt: Date.now(),
+    };
+    pushHistory(`Local: ${layer.name}`, updated);
+    set({ recipe: updated });
+  },
+
+  updateLocalEdit: (id, updates) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      localEdits: recipe.localEdits.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Update local edit', updated);
+    set({ recipe: updated });
+  },
+
+  addLocalEditStroke: (id, stroke) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      localEdits: recipe.localEdits.map((l) =>
+        l.id === id ? { ...l, strokes: [...l.strokes, stroke] } : l
+      ),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Paint local edit', updated);
+    set({ recipe: updated });
+  },
+
+  addTextLayer: (layer) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      textLayers: [...recipe.textLayers, layer],
+      updatedAt: Date.now(),
+    };
+    pushHistory(`Text: ${layer.text.slice(0, 12)}`, updated);
+    set({ recipe: updated });
+  },
+
+  updateTextLayer: (id, updates) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      textLayers: recipe.textLayers.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Update text', updated);
+    set({ recipe: updated });
+  },
+
+  removeTextLayer: (id) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      textLayers: recipe.textLayers.filter((l) => l.id !== id),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Remove text', updated);
+    set({ recipe: updated });
+  },
+
+  setTiltShift: (tiltShift) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, tiltShift, updatedAt: Date.now() };
+    pushHistory('Tilt-shift', updated);
+    set({ recipe: updated });
+  },
+
+  addHealSpot: (spot) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      healSpots: [...recipe.healSpots, spot],
+      updatedAt: Date.now(),
+    };
+    pushHistory('Heal spot', updated);
+    set({ recipe: updated });
+  },
+
+  applyHealSpots: (result) => {
+    const { recipe, currentImage } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      workingUri: result.uri,
+      healSpots: recipe.healSpots.map((s) => ({ ...s, healed: true })),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Apply healing', updated);
+    set({
+      recipe: updated,
+      currentImage: currentImage
+        ? { ...currentImage, uri: result.uri, width: result.width, height: result.height }
+        : null,
+    });
+  },
+
+  setPerspective: (perspective) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, perspective, updatedAt: Date.now() };
+    pushHistory('Perspective', updated);
+    set({ recipe: updated });
+  },
+
+  addOverlayLayer: (layer) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      overlayLayers: [...recipe.overlayLayers, layer],
+      updatedAt: Date.now(),
+    };
+    pushHistory(`Overlay: ${layer.name}`, updated);
+    set({ recipe: updated });
+  },
+
+  updateOverlayLayer: (id, updates) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      overlayLayers: recipe.overlayLayers.map((l) =>
+        l.id === id ? { ...l, ...updates } : l
+      ),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Update overlay', updated);
+    set({ recipe: updated });
+  },
+
+  removeOverlayLayer: (id) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = {
+      ...recipe,
+      overlayLayers: recipe.overlayLayers.filter((l) => l.id !== id),
+      updatedAt: Date.now(),
+    };
+    pushHistory('Remove overlay', updated);
     set({ recipe: updated });
   },
 
