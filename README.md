@@ -126,15 +126,30 @@ Metro resolves `.web.tsx` variants automatically:
 
 ## Algorithmic Enhancement Stack
 
-### Progressive Upscale (`upscaler.ts`)
+### Super Resolution (`upscaler.ts` + `skiaResize.ts` + `detailEnhancement.ts`)
 
-Single-step resize produces staircasing and softness. PhotoLab upscales in **2× increments** using the platform bicubic resampler, then applies an **unsharp mask**:
+Multi-pass GPU pipeline designed to mimic higher-resolution sensor output:
 
-```
-result = original + α × (original − gaussianBlur(original, σ))
-```
+1. **Pre-denoise** — suppress sensor grain before amplification
+2. **Progressive 2× Skia upscales** — cubic GPU sampling (not single-step jump)
+3. **Edge-adaptive detail recovery** — acutance on edges, smooth on flat areas
+4. **Luminance-only sharpening** — no color fringing halos
+5. **Local contrast + clarity** — micro-detail boost
 
-σ scales with output resolution (`targetW / 2000`). α derived from user strength slider.
+Quality modes: **Fast** / **High** / **Max**. Factors: 2×, 4×, 8×.
+
+### Background Replacement (`segmentation.ts` + `compositor.ts`)
+
+Auto-segments subjects via corner color-distance sampling, builds feathered alpha mask, and composites over:
+
+- **Blur** — portrait-mode background blur
+- **Solid color** — 10 preset swatches
+- **Gradient** — 5 cinematic gradients
+- **Custom photo** — pick from library
+
+### Filters (`FiltersPanel` + 26 presets)
+
+Non-destructive color looks with intensity slider (0–100%). Packs: Cinematic, Film, Vintage, Neon, HDR, Moody, Portrait, Vivid, Monochrome.
 
 ### Edge-Preserving Denoise
 
