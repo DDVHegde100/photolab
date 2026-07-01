@@ -13,12 +13,12 @@ interface GlassPanelProps {
 export function GlassPanel({
   children,
   style,
-  intensity = 40,
+  intensity = 55,
   padding = spacing.lg,
 }: GlassPanelProps) {
   return (
     <View style={[styles.container, style]}>
-      <BlurView intensity={intensity} tint="dark" style={StyleSheet.absoluteFill} />
+      <BlurView intensity={intensity} tint="systemMaterialDark" style={StyleSheet.absoluteFill} />
       <View style={[styles.content, { padding }]}>{children}</View>
     </View>
   );
@@ -27,8 +27,8 @@ export function GlassPanel({
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    borderRadius: radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     backgroundColor: colors.surfaceGlass,
   },
