@@ -1,19 +1,22 @@
 import type { ProcessedImage } from './types';
-import type { UpscaleFactor } from './upscaler';
-import { progressiveUpscale } from './upscaler';
+import type { UpscaleFactor, UpscaleQuality } from './upscaler';
+import { progressiveUpscale, probeImageDimensions } from './upscaler';
 import {
   applyDenoise,
   applyPortraitEnhance,
   applyLowLightRecovery,
   applyAutoColor,
 } from './skiaFilters';
+import { replaceBackground } from './compositor';
+import type { BackgroundLayer } from '../core/types';
 
 export type EnhancementType =
   | 'upscale'
   | 'denoise'
   | 'portrait'
   | 'lowlight'
-  | 'autocolor';
+  | 'autocolor'
+  | 'background';
 
 export interface EnhancementInput {
   uri: string;
@@ -24,7 +27,9 @@ export interface EnhancementInput {
 export interface EnhancementOptions {
   strength?: number;
   upscaleFactor?: UpscaleFactor;
-  onProgress?: (step: number, total: number) => void;
+  upscaleQuality?: UpscaleQuality;
+  background?: BackgroundLayer;
+  onProgress?: (step: number, total: number, label?: string) => void;
 }
 
 export const imageProcessor = {
@@ -33,9 +38,14 @@ export const imageProcessor = {
     options: EnhancementOptions = {}
   ): Promise<ProcessedImage> {
     const factor = options.upscaleFactor ?? 2;
-    return progressiveUpscale(input.uri, input.width, input.height, {
+    let dims = input;
+    if (input.width <= 0 || input.height <= 0) {
+      dims = { ...input, ...(await probeImageDimensions(input.uri)) };
+    }
+    return progressiveUpscale(dims.uri, dims.width, dims.height, {
       factor,
-      sharpening: 0.4 + (options.strength ?? 0.7) * 0.35,
+      sharpening: options.strength ?? 0.75,
+      quality: options.upscaleQuality ?? 'high',
       onProgress: options.onProgress,
     });
   },
@@ -55,6 +65,19 @@ export const imageProcessor = {
   async autoColor(input: EnhancementInput): Promise<ProcessedImage> {
     return applyAutoColor(input.uri);
   },
+
+  async replaceBackground(
+    input: EnhancementInput,
+    background: BackgroundLayer,
+    strength = 0.7
+  ): Promise<ProcessedImage & { maskUri: string }> {
+    return replaceBackground(input.uri, background, {
+      threshold: 35 + (1 - strength) * 25,
+      feather: 10 + strength * 8,
+    });
+  },
+
+  probeDimensions: probeImageDimensions,
 };
 
 export type { ProcessedImage } from './types';
