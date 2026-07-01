@@ -134,10 +134,22 @@ export interface DrawingLayer {
 }
 
 export interface EnhancementRecord {
-  type: 'upscale' | 'denoise' | 'portrait' | 'lowlight' | 'autocolor';
+  type: 'upscale' | 'denoise' | 'portrait' | 'lowlight' | 'autocolor' | 'background';
   factor?: 2 | 4 | 8;
   strength: number;
   appliedAt: number;
+}
+
+export type BackgroundType = 'color' | 'image' | 'blur' | 'gradient';
+
+export interface BackgroundLayer {
+  type: BackgroundType;
+  color?: string;
+  imageUri?: string;
+  blurAmount?: number;
+  gradientColors?: string[];
+  maskUri?: string;
+  enabled: boolean;
 }
 
 export interface FilterPreset {
@@ -182,6 +194,8 @@ export interface ImageRecipe {
   /** @deprecated migrated to enhancements */
   aiEnhancements?: EnhancementRecord[];
   activeFilter: string | null;
+  filterIntensity: number;
+  background: BackgroundLayer | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -215,6 +229,7 @@ export type EditorTool =
   | 'enhance'
   | 'export'
   | 'filters'
+  | 'background'
   | 'curves'
   | 'hsl'
   | 'colorGrade';
