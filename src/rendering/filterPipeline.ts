@@ -3,6 +3,8 @@ import { DEFAULT_ADJUSTMENTS } from '../core/defaults';
 import { buildColorMatrix, curveToLUT, applyCurveMatrix } from './colorMatrix';
 import { hslToColorMatrix, colorGradeToMatrix } from './hslProcessor';
 import { getPresetAdjustments } from '../assets/presets';
+import { mergeAdjustmentLayers } from './layerStack';
+import { splitToneToMatrix } from './splitTone';
 
 export interface RenderParams {
   colorMatrix: number[];
@@ -30,6 +32,14 @@ export function computeRenderParams(recipe: ImageRecipe): RenderParams {
 
   const rgbLUT = curveToLUT(recipe.curves.rgb);
   matrix = applyCurveMatrix(matrix, rgbLUT);
+
+  if (recipe.splitTone && (recipe.splitTone.shadowSaturation !== 0 || recipe.splitTone.highlightSaturation !== 0)) {
+    matrix = multiplyMatrices(matrix, splitToneToMatrix(recipe.splitTone));
+  }
+
+  if (recipe.adjustmentLayers?.length) {
+    matrix = mergeAdjustmentLayers(matrix, recipe.adjustmentLayers);
+  }
 
   return {
     colorMatrix: matrix,

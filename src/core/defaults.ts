@@ -59,3 +59,32 @@ export const DEFAULT_CURVES: CurveData = {
   green: identityCurve(),
   blue: identityCurve(),
 };
+
+export const DEFAULT_FINISHING: import('./types').FinishingEffects = {
+  vignetteAmount: 0,
+  vignetteRoundness: 0.5,
+  grainAmount: 0,
+  fadeAmount: 0,
+};
+
+export const DEFAULT_SPLIT_TONE: import('./types').SplitTone = {
+  shadowHue: 220,
+  shadowSaturation: 0,
+  highlightHue: 40,
+  highlightSaturation: 0,
+  balance: 0,
+};
+
+export const DEFAULT_TILT_SHIFT: import('./types').TiltShift = {
+  enabled: false,
+  centerY: 0.5,
+  bandSize: 0.25,
+  blurAmount: 0.5,
+  angle: 0,
+};
+
+export const DEFAULT_PERSPECTIVE: import('./types').PerspectiveCorrection = {
+  horizontal: 0,
+  vertical: 0,
+  rotation: 0,
+};

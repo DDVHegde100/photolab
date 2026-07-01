@@ -5,6 +5,10 @@ import {
   DEFAULT_HSL,
   DEFAULT_COLOR_GRADE,
   DEFAULT_CURVES,
+  DEFAULT_FINISHING,
+  DEFAULT_SPLIT_TONE,
+  DEFAULT_TILT_SHIFT,
+  DEFAULT_PERSPECTIVE,
 } from './defaults';
 
 export function createRecipe(imageId: string, originalUri: string): ImageRecipe {
@@ -24,6 +28,15 @@ export function createRecipe(imageId: string, originalUri: string): ImageRecipe 
     activeFilter: null,
     filterIntensity: 1,
     background: null,
+    adjustmentLayers: [],
+    finishing: structuredClone(DEFAULT_FINISHING),
+    splitTone: structuredClone(DEFAULT_SPLIT_TONE),
+    localEdits: [],
+    textLayers: [],
+    tiltShift: structuredClone(DEFAULT_TILT_SHIFT),
+    healSpots: [],
+    perspective: structuredClone(DEFAULT_PERSPECTIVE),
+    overlayLayers: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -107,5 +120,14 @@ export function deserializeRecipe(json: string): ImageRecipe {
   if (!recipe.enhancements) recipe.enhancements = [];
   if (recipe.filterIntensity === undefined) recipe.filterIntensity = 1;
   if (recipe.background === undefined) recipe.background = null;
+  if (!recipe.adjustmentLayers) recipe.adjustmentLayers = [];
+  if (!recipe.finishing) recipe.finishing = structuredClone(DEFAULT_FINISHING);
+  if (!recipe.splitTone) recipe.splitTone = structuredClone(DEFAULT_SPLIT_TONE);
+  if (!recipe.localEdits) recipe.localEdits = [];
+  if (!recipe.textLayers) recipe.textLayers = [];
+  if (!recipe.tiltShift) recipe.tiltShift = structuredClone(DEFAULT_TILT_SHIFT);
+  if (!recipe.healSpots) recipe.healSpots = [];
+  if (!recipe.perspective) recipe.perspective = structuredClone(DEFAULT_PERSPECTIVE);
+  if (!recipe.overlayLayers) recipe.overlayLayers = [];
   return recipe;
 }

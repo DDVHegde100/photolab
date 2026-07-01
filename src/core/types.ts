@@ -152,6 +152,85 @@ export interface BackgroundLayer {
   enabled: boolean;
 }
 
+export interface AdjustmentLayer {
+  id: string;
+  name: string;
+  adjustments: Partial<AdjustmentValues>;
+  visible: boolean;
+  opacity: number;
+}
+
+export interface FinishingEffects {
+  vignetteAmount: number;
+  vignetteRoundness: number;
+  grainAmount: number;
+  fadeAmount: number;
+}
+
+export interface SplitTone {
+  shadowHue: number;
+  shadowSaturation: number;
+  highlightHue: number;
+  highlightSaturation: number;
+  balance: number;
+}
+
+export type LocalEditType = 'exposure' | 'contrast' | 'saturation' | 'warmth';
+
+export interface LocalEditLayer {
+  id: string;
+  name: string;
+  editType: LocalEditType;
+  amount: number;
+  strokes: BrushStroke[];
+  visible: boolean;
+  opacity: number;
+}
+
+export interface TextLayer {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  rotation: number;
+  opacity: number;
+  visible: boolean;
+  fontWeight: 'normal' | 'bold';
+}
+
+export interface TiltShift {
+  enabled: boolean;
+  centerY: number;
+  bandSize: number;
+  blurAmount: number;
+  angle: number;
+}
+
+export interface HealSpot {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  healed: boolean;
+}
+
+export interface PerspectiveCorrection {
+  horizontal: number;
+  vertical: number;
+  rotation: number;
+}
+
+export interface OverlayImageLayer {
+  id: string;
+  name: string;
+  uri: string;
+  opacity: number;
+  visible: boolean;
+  blendMode: DrawingLayer['blendMode'];
+}
+
 export interface FilterPreset {
   id: string;
   name: string;
@@ -196,6 +275,15 @@ export interface ImageRecipe {
   activeFilter: string | null;
   filterIntensity: number;
   background: BackgroundLayer | null;
+  adjustmentLayers: AdjustmentLayer[];
+  finishing: FinishingEffects;
+  splitTone: SplitTone;
+  localEdits: LocalEditLayer[];
+  textLayers: TextLayer[];
+  tiltShift: TiltShift;
+  healSpots: HealSpot[];
+  perspective: PerspectiveCorrection;
+  overlayLayers: OverlayImageLayer[];
   createdAt: number;
   updatedAt: number;
 }
@@ -230,6 +318,15 @@ export type EditorTool =
   | 'export'
   | 'filters'
   | 'background'
+  | 'layers'
+  | 'effects'
+  | 'tone'
+  | 'selective'
+  | 'text'
+  | 'focus'
+  | 'heal'
+  | 'transform'
+  | 'overlay'
   | 'curves'
   | 'hsl'
   | 'colorGrade';
