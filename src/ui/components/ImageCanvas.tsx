@@ -18,6 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { ImageRecipe, MaskData } from '../../core/types';
 import { computeRenderParams } from '../../rendering/filterPipeline';
+import { CanvasLayerEffects, getPerspectiveTransform } from './CanvasLayerEffects';
 import { colors } from '../theme';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -80,6 +81,7 @@ interface ImageCanvasProps {
   onComparePositionChange?: (position: number) => void;
   liveStroke?: import('../../core/types').BrushStroke | null;
   showMasks?: boolean;
+  showHealSpots?: boolean;
 }
 
 export function ImageCanvas({
@@ -92,6 +94,7 @@ export function ImageCanvas({
   onComparePositionChange,
   liveStroke,
   showMasks = false,
+  showHealSpots = false,
 }: ImageCanvasProps) {
   const image = useImage(uri);
   const originalImage = useImage(isComparing ? recipe.originalUri : null);
@@ -103,6 +106,7 @@ export function ImageCanvas({
   const savedTranslateY = useSharedValue(0);
 
   const renderParams = useMemo(() => computeRenderParams(recipe), [recipe]);
+  const perspTransform = getPerspectiveTransform(recipe.perspective);
 
   const canvasW = SCREEN_W;
   const canvasH = height ?? SCREEN_H * 0.55;
@@ -161,16 +165,29 @@ export function ImageCanvas({
       <Animated.View style={[styles.container, { height: canvasH }, animatedStyle]}>
         <Canvas style={{ width: canvasW, height: canvasH }}>
           <Group>
-            <SkiaImage
-              image={image}
-              x={offsetX}
-              y={offsetY}
-              width={drawW}
-              height={drawH}
-              fit="contain"
-            >
-              <ColorMatrix matrix={renderParams.colorMatrix} />
-            </SkiaImage>
+            <Group transform={perspTransform}>
+              <SkiaImage
+                image={image}
+                x={offsetX}
+                y={offsetY}
+                width={drawW}
+                height={drawH}
+                fit="contain"
+              >
+                <ColorMatrix matrix={renderParams.colorMatrix} />
+              </SkiaImage>
+            </Group>
+
+            <CanvasLayerEffects
+              recipe={recipe}
+              offsetX={offsetX}
+              offsetY={offsetY}
+              drawW={drawW}
+              drawH={drawH}
+              canvasW={canvasW}
+              canvasH={canvasH}
+              showHealSpots={showHealSpots}
+            />
 
             {recipe.drawingLayers.flatMap((layer) =>
               layer.visible
