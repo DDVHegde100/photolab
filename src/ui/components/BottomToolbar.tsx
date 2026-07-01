@@ -1,17 +1,19 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ToolButton } from './ToolButton';
 import { GlassPanel } from './GlassPanel';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
 import type { EditorTool } from '../../core/types';
 
 const TOOLS: { id: EditorTool; label: string; icon: string }[] = [
   { id: 'adjust', label: 'Adjust', icon: '☀️' },
+  { id: 'filters', label: 'Filters', icon: '🎭' },
   { id: 'crop', label: 'Crop', icon: '⬜' },
-  { id: 'mask', label: 'Mask', icon: '◎' },
-  { id: 'brush', label: 'Brush', icon: '✏️' },
+  { id: 'background', label: 'BG', icon: '🖼' },
   { id: 'enhance', label: 'Enhance', icon: '✦' },
+  { id: 'brush', label: 'Brush', icon: '✏️' },
+  { id: 'mask', label: 'Mask', icon: '◎' },
   { id: 'export', label: 'Export', icon: '↗' },
 ];
 
@@ -24,9 +26,13 @@ export function BottomToolbar({ activeTool, onToolChange }: BottomToolbarProps) 
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: insets.bottom + spacing.sm }]}>
-      <GlassPanel style={styles.panel} padding={spacing.sm}>
-        <View style={styles.row}>
+    <View style={[styles.wrapper, { paddingBottom: insets.bottom + spacing.sm }, shadows.toolbar]}>
+      <GlassPanel style={styles.panel} padding={spacing.xs}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.row}
+        >
           {TOOLS.map((tool) => (
             <ToolButton
               key={tool.id}
@@ -36,7 +42,7 @@ export function BottomToolbar({ activeTool, onToolChange }: BottomToolbarProps) 
               onPress={() => onToolChange(tool.id)}
             />
           ))}
-        </View>
+        </ScrollView>
       </GlassPanel>
     </View>
   );
@@ -44,15 +50,15 @@ export function BottomToolbar({ activeTool, onToolChange }: BottomToolbarProps) 
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.background,
   },
   panel: {
-    borderRadius: 20,
+    borderRadius: 22,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
+    paddingHorizontal: spacing.xs,
   },
 });
