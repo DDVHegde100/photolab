@@ -13,6 +13,7 @@ import type {
   HSLAdjustments,
   ColorGrade,
   CurveData,
+  BackgroundLayer,
 } from './types';
 import { createRecipe, updateAdjustments, resetAdjustments } from './editEngine';
 import { historyManager } from './historyManager';
@@ -58,7 +59,9 @@ interface EditorState {
   setCurves: (curves: CurveData) => void;
   setCrop: (crop: CropData | null) => void;
   setActiveFilter: (filterId: string | null) => void;
+  setFilterIntensity: (intensity: number) => void;
   applyPreset: (adjustments: Partial<AdjustmentValues>, filterId?: string) => void;
+  setBackground: (background: BackgroundLayer | null) => void;
   resetAll: () => void;
 
   addMask: (mask: MaskData) => void;
@@ -179,7 +182,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { recipe } = get();
     if (!recipe) return;
     const updated = { ...recipe, activeFilter: filterId, updatedAt: Date.now() };
-    pushHistory('Apply filter', updated);
+    pushHistory(filterId ? `Filter: ${filterId}` : 'Clear filter', updated);
+    set({ recipe: updated });
+  },
+
+  setFilterIntensity: (intensity) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, filterIntensity: intensity, updatedAt: Date.now() };
+    pushHistory('Filter intensity', updated);
     set({ recipe: updated });
   },
 
@@ -192,6 +203,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       updatedAt: Date.now(),
     };
     pushHistory('Apply preset', updated);
+    set({ recipe: updated });
+  },
+
+  setBackground: (background) => {
+    const { recipe } = get();
+    if (!recipe) return;
+    const updated = { ...recipe, background, updatedAt: Date.now() };
+    pushHistory('Background', updated);
     set({ recipe: updated });
   },
 
@@ -256,12 +275,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   applyEnhancement: (enhancement, result) => {
     const { recipe, currentImage } = get();
     if (!recipe) return;
-    const updated = {
+    const updated: ImageRecipe = {
       ...recipe,
       workingUri: result.uri,
       enhancements: [...recipe.enhancements, enhancement],
       updatedAt: Date.now(),
     };
+    if ('maskUri' in result && typeof result.maskUri === 'string') {
+      updated.background = {
+        ...(recipe.background ?? { type: 'blur', enabled: true, blurAmount: 0.6 }),
+        maskUri: result.maskUri,
+        enabled: true,
+      };
+    }
     pushHistory(`Enhance: ${enhancement.type}`, updated);
     set({
       recipe: updated,
