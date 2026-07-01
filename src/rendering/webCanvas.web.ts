@@ -19,7 +19,7 @@ export function adjustmentsToCSSFilter(adj: AdjustmentValues): string {
     .join(' ');
 }
 
-async function loadHTMLImage(uri: string): Promise<HTMLImageElement> {
+export async function loadHTMLImage(uri: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.crossOrigin = 'anonymous';

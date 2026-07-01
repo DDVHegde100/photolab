@@ -55,7 +55,14 @@
       ]
     ],
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#0B0B0F",
+      "themeColor": "#0B0B0F",
+      "bundler": "metro",
+      "name": "PhotoLab",
+      "shortName": "PhotoLab",
+      "display": "standalone",
+      "orientation": "portrait"
     }
   }
 }

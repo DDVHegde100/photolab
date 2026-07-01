@@ -1,5 +1,5 @@
+import { bakeRecipeToImage } from '../../rendering/exportBaker';
 import type { ImageRecipe, ExportOptions } from '../../core/types';
-import { getDisplayUri } from '../../core/types';
 
 export async function requestPermissions(): Promise<boolean> {
   return true;
@@ -9,7 +9,7 @@ export async function exportImage(
   recipe: ImageRecipe,
   options: ExportOptions
 ): Promise<string> {
-  return getDisplayUri(recipe);
+  return bakeRecipeToImage(recipe, options);
 }
 
 export async function saveToGallery(uri: string): Promise<boolean> {
@@ -17,7 +17,9 @@ export async function saveToGallery(uri: string): Promise<boolean> {
     const link = document.createElement('a');
     link.href = uri;
     link.download = `photolab-export-${Date.now()}.png`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     return true;
   } catch {
     return false;
