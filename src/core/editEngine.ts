@@ -22,6 +22,8 @@ export function createRecipe(imageId: string, originalUri: string): ImageRecipe 
     drawingLayers: [],
     enhancements: [],
     activeFilter: null,
+    filterIntensity: 1,
+    background: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -84,6 +86,7 @@ export function resetAdjustments(recipe: ImageRecipe): ImageRecipe {
     colorGrade: structuredClone(DEFAULT_COLOR_GRADE),
     curves: structuredClone(DEFAULT_CURVES),
     activeFilter: null,
+    filterIntensity: 1,
     updatedAt: Date.now(),
   };
 }
@@ -102,5 +105,7 @@ export function deserializeRecipe(json: string): ImageRecipe {
     }));
   }
   if (!recipe.enhancements) recipe.enhancements = [];
+  if (recipe.filterIntensity === undefined) recipe.filterIntensity = 1;
+  if (recipe.background === undefined) recipe.background = null;
   return recipe;
 }
