@@ -1,22 +1,33 @@
-import * as ImageManipulator from 'expo-image-manipulator';
-import type { ProcessedImage } from './skiaFilters';
-import { applyUnsharpMask } from './skiaFilters';
+import type { ProcessedImage } from './types';
+import { skiaProgressiveResize, probeImageDimensions } from './skiaResize';
+import { applyPreUpscaleDenoise, applyUpscaleFinish, applyClarityBoost } from './detailEnhancement';
 
 export type UpscaleFactor = 2 | 4 | 8;
 
+export type UpscaleQuality = 'standard' | 'high' | 'max';
+
 export interface UpscaleOptions {
   factor: UpscaleFactor;
-  /** 0–1 natural sharpening after upscale (default 0.55) */
+  /** 0–1 detail recovery strength (default 0.75) */
   sharpening?: number;
-  onProgress?: (step: number, total: number) => void;
+  quality?: UpscaleQuality;
+  onProgress?: (step: number, total: number, label?: string) => void;
 }
 
+const QUALITY_STRENGTH: Record<UpscaleQuality, number> = {
+  standard: 0.55,
+  high: 0.75,
+  max: 0.92,
+};
+
 /**
- * Progressive upscaling in 2× steps using native high-quality interpolation,
- * then a subtle unsharp mask to restore edge acutance without halos.
- *
- * Multi-pass 2× scaling produces significantly more natural results than
- * a single large jump — similar to Lanczos progressive upsampling.
+ * Professional multi-pass super-resolution pipeline:
+ * 1. Probe true dimensions
+ * 2. Pre-denoise to avoid amplifying sensor grain
+ * 3. Progressive Skia 2× GPU upscales (cubic sampling)
+ * 4. Edge-adaptive detail recovery
+ * 5. Luminance-only sharpening (no color fringing)
+ * 6. Micro-contrast clarity finish
  */
 export async function progressiveUpscale(
   uri: string,
@@ -24,53 +35,50 @@ export async function progressiveUpscale(
   height: number,
   options: UpscaleOptions
 ): Promise<ProcessedImage> {
-  const { factor, sharpening = 0.55, onProgress } = options;
-  const targetW = Math.round(width * factor);
-  const targetH = Math.round(height * factor);
+  const { factor, quality = 'high', onProgress } = options;
+  const sharpening = options.sharpening ?? QUALITY_STRENGTH[quality];
 
-  let currentUri = uri;
-  let currentW = width;
-  let currentH = height;
+  let dims = { width, height };
+  if (width <= 0 || height <= 0) {
+    dims = await probeImageDimensions(uri);
+  }
 
-  const stepsNeeded = Math.ceil(Math.log2(factor));
-  const totalSteps = stepsNeeded + 1; // +1 for final sharpen pass
+  const targetW = Math.round(dims.width * factor);
+  const targetH = Math.round(dims.height * factor);
+  const totalSteps = 5;
   let step = 0;
 
-  // Progressive 2× passes — each uses the platform's bicubic/Lanczos resampler
-  while (currentW < targetW) {
-    step++;
-    onProgress?.(step, totalSteps);
-
-    const nextW = Math.min(currentW * 2, targetW);
-    const result = await ImageManipulator.manipulateAsync(
-      currentUri,
-      [{ resize: { width: nextW } }],
-      { compress: 1, format: ImageManipulator.SaveFormat.PNG }
-    );
-
-    currentUri = result.uri;
-    currentW = result.width;
-    currentH = result.height;
-  }
-
-  // Exact target if aspect ratio rounding left us short
-  if (currentW !== targetW) {
-    const result = await ImageManipulator.manipulateAsync(
-      currentUri,
-      [{ resize: { width: targetW, height: targetH } }],
-      { compress: 1, format: ImageManipulator.SaveFormat.PNG }
-    );
-    currentUri = result.uri;
-    currentW = result.width;
-    currentH = result.height;
-  }
-
-  // Natural acutance restoration — radius scales with output size
   step++;
-  onProgress?.(step, totalSteps);
+  onProgress?.(step, totalSteps, 'Preparing');
+  const prepared = await applyPreUpscaleDenoise(uri, sharpening * 0.4);
 
-  const radius = Math.max(0.8, Math.min(2.2, targetW / 2000));
-  const sharpened = await applyUnsharpMask(currentUri, sharpening * 0.85, radius);
+  step++;
+  onProgress?.(step, totalSteps, 'Upscaling');
+  const upscaled = await skiaProgressiveResize(
+    prepared.uri,
+    prepared.width,
+    prepared.height,
+    targetW,
+    targetH,
+    (s, t) => onProgress?.(step, totalSteps, `Scale ${s}/${t}`)
+  );
 
-  return sharpened;
+  step++;
+  onProgress?.(step, totalSteps, 'Detail recovery');
+  const detailed = await applyUpscaleFinish(upscaled.uri, targetW, sharpening);
+
+  step++;
+  onProgress?.(step, totalSteps, 'Clarity');
+  const clarified = await applyClarityBoost(detailed.uri, sharpening * 0.5);
+
+  step++;
+  onProgress?.(step, totalSteps, 'Done');
+
+  return {
+    uri: clarified.uri,
+    width: targetW,
+    height: targetH,
+  };
 }
+
+export { probeImageDimensions };
