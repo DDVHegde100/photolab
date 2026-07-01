@@ -1,4 +1,5 @@
 import type { ImageRecipe, AdjustmentValues } from '../core/types';
+import { DEFAULT_ADJUSTMENTS } from '../core/defaults';
 import { buildColorMatrix, curveToLUT, applyCurveMatrix } from './colorMatrix';
 import { hslToColorMatrix, colorGradeToMatrix } from './hslProcessor';
 import { getPresetAdjustments } from '../assets/presets';
@@ -15,8 +16,9 @@ export function computeRenderParams(recipe: ImageRecipe): RenderParams {
   if (recipe.activeFilter) {
     const preset = getPresetAdjustments(recipe.activeFilter);
     if (preset) {
-      const presetMatrix = buildColorMatrix({ ...recipe.adjustments, ...preset });
-      matrix = blendMatrices(matrix, presetMatrix, 0.7);
+      const presetMatrix = buildColorMatrix({ ...DEFAULT_ADJUSTMENTS, ...preset });
+      const intensity = recipe.filterIntensity ?? 1;
+      matrix = blendMatrices(matrix, presetMatrix, intensity);
     }
   }
 
