@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { EditorScreen } from './src/screens/EditorScreen';
+import { ErrorBoundary } from './src/ui/components/ErrorBoundary';
 import { colors } from './src/ui/theme';
 
 export default function App() {
@@ -15,12 +16,14 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
-        {editing ? (
-          <EditorScreen onClose={closeEditor} />
-        ) : (
-          <HomeScreen onOpenEditor={openEditor} />
-        )}
+        <ErrorBoundary>
+          <StatusBar style="light" />
+          {editing ? (
+            <EditorScreen onClose={closeEditor} />
+          ) : (
+            <HomeScreen onOpenEditor={openEditor} />
+          )}
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
