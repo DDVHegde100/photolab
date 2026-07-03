@@ -39,6 +39,24 @@ const ENHANCE_TOOLS = [
     description: 'White balance correction',
     icon: '🎨',
   },
+  {
+    id: 'anime-clean',
+    label: 'Anime / Illustration',
+    description: 'Smooth flat color, restore crisp ink edges',
+    icon: '✒',
+  },
+  {
+    id: 'artifact-clean',
+    label: 'Compression Cleanup',
+    description: 'Reduce JPEG blocks and social-media artifacts',
+    icon: '▦',
+  },
+  {
+    id: 'line-art',
+    label: 'Line Art / Text',
+    description: 'Sharpen scans, manga panels, and screenshots',
+    icon: 'A',
+  },
 ];
 
 const QUALITY_MODES: { id: UpscaleQuality; label: string }[] = [
@@ -101,6 +119,18 @@ export function EnhancePanel() {
         case 'autocolor':
           result = await imageProcessor.autoColor(input);
           applyEnhancement({ type: 'autocolor', strength: 1, appliedAt: Date.now() }, result);
+          break;
+        case 'anime-clean':
+          result = await imageProcessor.animeCleanup(input, strength);
+          applyEnhancement({ type: 'anime-clean', strength, appliedAt: Date.now() }, result);
+          break;
+        case 'artifact-clean':
+          result = await imageProcessor.artifactCleanup(input, strength);
+          applyEnhancement({ type: 'artifact-clean', strength, appliedAt: Date.now() }, result);
+          break;
+        case 'line-art':
+          result = await imageProcessor.lineArtCleanup(input, strength);
+          applyEnhancement({ type: 'line-art', strength, appliedAt: Date.now() }, result);
           break;
       }
     } finally {
