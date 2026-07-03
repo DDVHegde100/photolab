@@ -56,3 +56,29 @@ export async function applyPortraitEnhance(
   }
   return current;
 }
+
+export async function applyAnimeCleanup(uri: string, strength: number): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  const smooth = await applyCSSFilterToUri(
+    uri,
+    `blur(${(s * 0.55).toFixed(2)}px) saturate(${(1 + s * 0.08).toFixed(3)})`
+  );
+  return applyCSSFilterToUri(
+    smooth.uri,
+    `contrast(${(1 + s * 0.28).toFixed(3)}) saturate(${(1 + s * 0.06).toFixed(3)})`
+  );
+}
+
+export async function applyArtifactCleanup(uri: string, strength: number): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  const smooth = await applyCSSFilterToUri(uri, `blur(${(0.25 + s * 0.75).toFixed(2)}px)`);
+  return applyCSSFilterToUri(smooth.uri, `contrast(${(1 + s * 0.14).toFixed(3)})`);
+}
+
+export async function applyLineArtCleanup(uri: string, strength: number): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  return applyCSSFilterToUri(
+    uri,
+    `grayscale(${(s * 0.35).toFixed(3)}) contrast(${(1 + s * 0.55).toFixed(3)}) brightness(${(1 + s * 0.03).toFixed(3)})`
+  );
+}
