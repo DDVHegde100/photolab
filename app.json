@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "PhotoLab",
-    "slug": "photolab-ai",
+    "slug": "photolab",
+    "description": "A private, local-first photo editor for web, iOS, and Android. Edit and export photos without uploads or accounts.",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,9 +17,12 @@
         "NSPhotoLibraryUsageDescription": "PhotoLab needs access to your photos for editing.",
         "NSPhotoLibraryAddUsageDescription": "PhotoLab saves edited photos to your gallery."
       },
-      "bundleIdentifier": "com.dhruvh.photolab-ai"
+      "bundleIdentifier": "com.ddvhegde.photolab",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.ddvhegde.photolab",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0F",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -61,6 +65,7 @@
       "bundler": "metro",
       "name": "PhotoLab",
       "shortName": "PhotoLab",
+      "description": "Private browser-based photo editing with local adjustments, cleanup, upscaling, and export.",
       "display": "standalone",
       "orientation": "portrait"
     }
