@@ -7,6 +7,38 @@ import { saveRecipe } from '../../storage/imageStorage';
 import { colors, spacing, typography, radius } from '../../ui/theme';
 import type { ExportOptions } from '../../core/types';
 
+const EXPORT_PROFILES: {
+  id: string;
+  label: string;
+  description: string;
+  options: ExportOptions;
+}[] = [
+  {
+    id: 'web',
+    label: 'Web / Share',
+    description: 'Small, clean JPEG for posting or sending',
+    options: { format: 'jpeg', quality: 0.88, scale: 1 },
+  },
+  {
+    id: 'social',
+    label: 'Social High',
+    description: 'High quality for Instagram, X, Discord, and previews',
+    options: { format: 'jpeg', quality: 0.94, scale: 2 },
+  },
+  {
+    id: 'print',
+    label: 'Print / Archive',
+    description: 'Maximum detail for keeping or printing',
+    options: { format: 'png', quality: 1, scale: 4 },
+  },
+  {
+    id: 'anime',
+    label: 'Anime / Art',
+    description: 'Lossless export for flat color and crisp line art',
+    options: { format: 'png', quality: 1, scale: 2 },
+  },
+];
+
 export function ExportPanel() {
   const recipe = useEditorStore((s) => s.recipe);
   const [options, setOptions] = useState<ExportOptions>({
@@ -45,6 +77,25 @@ export function ExportPanel() {
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Format</Text>
+      <View style={styles.profileList}>
+        {EXPORT_PROFILES.map((profile) => (
+          <TouchableOpacity
+            key={profile.id}
+            style={styles.profile}
+            onPress={() => setOptions(profile.options)}
+          >
+            <View style={styles.profileTextWrap}>
+              <Text style={styles.profileLabel}>{profile.label}</Text>
+              <Text style={styles.profileDesc}>{profile.description}</Text>
+            </View>
+            <Text style={styles.profileMeta}>
+              {profile.options.format.toUpperCase()} · {profile.options.scale}x
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.sectionTitle}>Manual Format</Text>
       <View style={styles.row}>
         {(['jpeg', 'png'] as const).map((fmt) => (
           <TouchableOpacity
@@ -84,6 +135,13 @@ export function ExportPanel() {
           formatValue={(v) => `${Math.round(v * 100)}%`}
         />
       )}
+
+      <View style={styles.exportSummary}>
+        <Text style={styles.summaryText}>
+          Exporting {options.format.toUpperCase()} at {options.scale}x
+          {options.format === 'jpeg' ? ` · ${Math.round(options.quality * 100)}% quality` : ''}
+        </Text>
+      </View>
 
       <View style={styles.actions}>
         <TouchableOpacity
@@ -131,6 +189,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
+  profileList: {
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  profile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.md,
+  },
+  profileTextWrap: {
+    flex: 1,
+  },
+  profileLabel: {
+    ...typography.subtitle,
+    color: colors.textPrimary,
+  },
+  profileDesc: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+  profileMeta: {
+    ...typography.micro,
+    color: colors.accentLight,
+  },
   chip: {
     flex: 1,
     paddingVertical: spacing.md,
@@ -155,6 +243,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     marginTop: spacing.xl,
+  },
+  exportSummary: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceElevated,
+  },
+  summaryText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   shareBtn: {
     flex: 1,

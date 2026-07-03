@@ -14,12 +14,17 @@ export async function exportImage(
 
 export async function saveToGallery(uri: string): Promise<boolean> {
   try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const ext = blob.type === 'image/jpeg' ? 'jpg' : 'png';
+    const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = uri;
-    link.download = `photolab-export-${Date.now()}.png`;
+    link.href = objectUrl;
+    link.download = `photolab-export-${Date.now()}.${ext}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     return true;
   } catch {
     return false;
