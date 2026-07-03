@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { GalleryImage, ImageRecipe } from '../core/types';
 import { createRecipe, serializeRecipe, deserializeRecipe } from '../core/editEngine';
 import { probeImageDimensions } from '../processing/skiaResize';
+import { persistImageBlob, restoreImageBlobUrl, deleteImageBlob } from './webBlobStore.web';
 
 const GALLERY_KEY = '@photolab/gallery';
 const RECIPES_KEY = '@photolab/recipes';
@@ -34,6 +35,12 @@ export async function importImage(
     createdAt: Date.now(),
   };
 
+  try {
+    await persistImageBlob(id, sourceUri);
+  } catch {
+    /* IndexedDB may be unavailable in private browsing; blob URLs still work for the session. */
+  }
+
   const recipe = createRecipe(id, sourceUri);
   await saveRecipe(recipe);
 
@@ -47,7 +54,16 @@ export async function importImage(
 export async function loadGallery(): Promise<GalleryImage[]> {
   try {
     const data = await AsyncStorage.getItem(GALLERY_KEY);
-    return data ? (JSON.parse(data) as GalleryImage[]) : [];
+    const gallery = data ? (JSON.parse(data) as GalleryImage[]) : [];
+    const restored = await Promise.all(
+      gallery.map(async (image) => {
+        const restoredUri = await restoreImageBlobUrl(image.id);
+        return restoredUri
+          ? { ...image, uri: restoredUri, thumbnailUri: restoredUri }
+          : image;
+      })
+    );
+    return restored;
   } catch {
     return [];
   }
@@ -60,7 +76,10 @@ export async function saveRecipe(recipe: ImageRecipe): Promise<void> {
 export async function loadRecipe(imageId: string): Promise<ImageRecipe | null> {
   try {
     const cached = await AsyncStorage.getItem(`${RECIPES_KEY}/${imageId}`);
-    return cached ? deserializeRecipe(cached) : null;
+    if (!cached) return null;
+    const recipe = deserializeRecipe(cached);
+    const restoredUri = await restoreImageBlobUrl(imageId);
+    return restoredUri ? { ...recipe, originalUri: restoredUri } : recipe;
   } catch {
     return null;
   }
@@ -76,6 +95,7 @@ export async function deleteImage(id: string): Promise<void> {
     URL.revokeObjectURL(image.uri);
   }
 
+  await deleteImageBlob(id);
   await AsyncStorage.removeItem(`${RECIPES_KEY}/${id}`);
 }
 
