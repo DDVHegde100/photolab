@@ -11,6 +11,7 @@ interface LayerItem {
   type: string;
   visible: boolean;
   onToggle: () => void;
+  locked?: boolean;
 }
 
 export function UnifiedLayersPanel() {
@@ -23,6 +24,17 @@ export function UnifiedLayersPanel() {
   if (!recipe) return null;
 
   const items: LayerItem[] = [
+    ...recipe.enhancements
+      .slice()
+      .reverse()
+      .map((enhancement, index) => ({
+        id: `enhancement-${enhancement.appliedAt}-${index}`,
+        name: enhancement.type.replace(/-/g, ' '),
+        type: 'Enhancement',
+        visible: true,
+        locked: true,
+        onToggle: () => {},
+      })),
     ...recipe.overlayLayers.map((l) => ({
       id: l.id,
       name: l.name,
@@ -57,7 +69,16 @@ export function UnifiedLayersPanel() {
       type: 'Draw',
       visible: l.visible,
       onToggle: () => {},
+      locked: true,
     })),
+    {
+      id: 'base-photo',
+      name: 'Original photo',
+      type: 'Base',
+      visible: true,
+      locked: true,
+      onToggle: () => {},
+    },
   ];
 
   return (
@@ -70,8 +91,14 @@ export function UnifiedLayersPanel() {
           items.map((item, index) => (
             <View key={item.id} style={styles.row}>
               <Text style={styles.order}>{items.length - index}</Text>
-              <TouchableOpacity onPress={item.onToggle} style={styles.eyeBtn}>
-                <Text>{item.visible ? '👁' : '—'}</Text>
+              <TouchableOpacity
+                onPress={item.onToggle}
+                style={styles.eyeBtn}
+                disabled={item.locked}
+              >
+                <Text style={item.locked && styles.lockedIcon}>
+                  {item.locked ? 'Lock' : item.visible ? 'On' : 'Off'}
+                </Text>
               </TouchableOpacity>
               <View style={styles.info}>
                 <Text style={styles.name}>{item.name}</Text>
@@ -97,7 +124,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   order: { ...typography.micro, color: colors.textTertiary, width: 20 },
-  eyeBtn: { width: 32, alignItems: 'center' },
+  eyeBtn: { width: 42, alignItems: 'center' },
+  lockedIcon: { ...typography.micro, color: colors.textTertiary },
   info: { flex: 1 },
   name: { ...typography.body, color: colors.textPrimary },
   type: { ...typography.micro, color: colors.textTertiary },

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { impactHaptic, ImpactFeedbackStyle } from '../platform/haptics';
@@ -77,6 +78,44 @@ export function EditorScreen({ onClose }: EditorScreenProps) {
     closeEditor();
     onClose();
   }, [recipe, closeEditor, onClose]);
+
+  React.useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const isTextInput = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      return !!el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+    };
+
+    const down = (event: KeyboardEvent) => {
+      if (isTextInput(event.target)) return;
+      const key = event.key.toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === 'z') {
+        event.preventDefault();
+        event.shiftKey ? redo() : undo();
+      } else if (key === 'e') {
+        event.preventDefault();
+        setActiveTool('export');
+      } else if (event.key === ' ') {
+        event.preventDefault();
+        setComparing(true);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    const up = (event: KeyboardEvent) => {
+      if (event.key === ' ') setComparing(false);
+    };
+
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
+  }, [handleClose, redo, setActiveTool, setComparing, undo]);
 
   const handleCompareStart = useCallback(() => {
     impactHaptic(ImpactFeedbackStyle.Medium);

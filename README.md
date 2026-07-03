@@ -1,6 +1,6 @@
 # PhotoLab
 
-Offline-first, non-destructive photo editing suite for iOS, Android, and Web. Built with **Expo SDK 54**, **React Native 0.81**, **TypeScript**, and **React Native Skia** for GPU-accelerated real-time preview.
+Offline-first, non-destructive photo editing suite for iOS, Android, and Web. Built with **Expo SDK 54**, **React Native 0.81**, **TypeScript**, **React Native Skia** on native, and a Canvas 2D renderer on web.
 
 No backend. No authentication. No cloud inference. All edits are serialized as JSON recipes; originals are never mutated.
 
@@ -13,7 +13,7 @@ No backend. No authentication. No cloud inference. All edits are serialized as J
 │                         Presentation                            │
 │  HomeScreen ──► EditorScreen ──► Tool Panels (Adjust/Crop/…)   │
 │       │              │                                          │
-│       │         ImageCanvas (Skia / CSS filters on Web)         │
+│       │         ImageCanvas (Skia / Canvas 2D on Web)           │
 └───────┼──────────────┼──────────────────────────────────────────┘
         │              │
 ┌───────▼──────────────▼──────────────────────────────────────────┐
@@ -49,7 +49,7 @@ No backend. No authentication. No cloud inference. All edits are serialized as J
 | `src/core/` | Recipe schema, edit engine, undo/redo, Zustand store |
 | `src/rendering/` | Color matrix math, HSL/curve processors, debounced preview |
 | `src/processing/` | Offline image ops: upscale, denoise, portrait, masks |
-| `src/storage/` | Gallery index + recipe persistence (FS native, AsyncStorage web) |
+| `src/storage/` | Gallery index + recipe persistence (FS native, IndexedDB web) |
 | `src/features/` | Tool panels: adjust, crop, mask, brush, enhance, export |
 | `src/ui/` | Theme tokens, glass panels, sliders, canvas, toolbar |
 | `src/platform/` | Platform abstractions (haptics, image picker) |
@@ -116,9 +116,9 @@ Metro resolves `.web.tsx` variants automatically:
 
 | Native | Web Fallback |
 |--------|-------------|
-| Skia `ColorMatrix` | CSS `filter: brightness() contrast() saturate()` |
+| Skia `ColorMatrix` | Canvas 2D color-matrix renderer |
 | Skia surface filters | HTML Canvas 2D + `ctx.filter` |
-| `expo-file-system` | Blob URLs + AsyncStorage |
+| `expo-file-system` | IndexedDB blobs + AsyncStorage recipes |
 | `expo-media-library` | `<a download>` / `navigator.share()` |
 | `expo-haptics` | No-op shim |
 
@@ -237,9 +237,30 @@ npx expo run:android
 npm run web
 # → http://localhost:8081
 
+# Static production web export for Vercel
+npm run build:web
+# → dist/
+
 # Type check
-npx tsc --noEmit
+npm run typecheck
+
+# Full local release check
+npm run verify
 ```
+
+## Deployment
+
+### Vercel
+
+This repo includes `vercel.json`. In Vercel, use framework preset **Other**, build command `npm run build:web`, and output directory `dist`.
+
+### TestFlight
+
+Native build settings live in `app.json` and `eas.json`. See [`RELEASE.md`](./RELEASE.md) for the iOS TestFlight checklist.
+
+## Privacy
+
+PhotoLab is local-first. See [`PRIVACY.md`](./PRIVACY.md) and [`TERMS.md`](./TERMS.md).
 
 ### Expo Go Compatibility
 
