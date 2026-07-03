@@ -6,6 +6,9 @@ import {
   applyPortraitEnhance,
   applyLowLightRecovery,
   applyAutoColor,
+  applyAnimeCleanup,
+  applyArtifactCleanup,
+  applyLineArtCleanup,
 } from './skiaFilters';
 import { replaceBackground } from './compositor';
 import type { BackgroundLayer } from '../core/types';
@@ -16,6 +19,9 @@ export type EnhancementType =
   | 'portrait'
   | 'lowlight'
   | 'autocolor'
+  | 'anime-clean'
+  | 'artifact-clean'
+  | 'line-art'
   | 'background';
 
 export interface EnhancementInput {
@@ -64,6 +70,18 @@ export const imageProcessor = {
 
   async autoColor(input: EnhancementInput): Promise<ProcessedImage> {
     return applyAutoColor(input.uri);
+  },
+
+  async animeCleanup(input: EnhancementInput, strength = 0.75): Promise<ProcessedImage> {
+    return applyAnimeCleanup(input.uri, strength);
+  },
+
+  async artifactCleanup(input: EnhancementInput, strength = 0.65): Promise<ProcessedImage> {
+    return applyArtifactCleanup(input.uri, strength);
+  },
+
+  async lineArtCleanup(input: EnhancementInput, strength = 0.75): Promise<ProcessedImage> {
+    return applyLineArtCleanup(input.uri, strength);
   },
 
   async replaceBackground(

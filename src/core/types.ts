@@ -134,7 +134,16 @@ export interface DrawingLayer {
 }
 
 export interface EnhancementRecord {
-  type: 'upscale' | 'denoise' | 'portrait' | 'lowlight' | 'autocolor' | 'background';
+  type:
+    | 'upscale'
+    | 'denoise'
+    | 'portrait'
+    | 'lowlight'
+    | 'autocolor'
+    | 'background'
+    | 'anime-clean'
+    | 'artifact-clean'
+    | 'line-art';
   factor?: 2 | 4 | 8;
   strength: number;
   appliedAt: number;
