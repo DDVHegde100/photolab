@@ -196,4 +196,67 @@ export async function applyPortraitEnhance(
   return { uri: current, width: sharpened.width, height: sharpened.height };
 }
 
+/** Illustration cleanup: smooth flat color regions while keeping ink edges crisp. */
+export async function applyAnimeCleanup(
+  uri: string,
+  strength: number
+): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  let current = uri;
+
+  const smoothed = await applyDenoise(current, s * 0.45);
+  current = smoothed.uri;
+
+  const edged = await applyAcutance(current, s * 0.72);
+  current = edged.uri;
+
+  return applyImageFilter(
+    current,
+    () => {
+      const matrix = Skia.ColorFilter.MakeMatrix([
+        1 + s * 0.08, 0, 0, 0, -s * 3,
+        0, 1 + s * 0.08, 0, 0, -s * 3,
+        0, 0, 1 + s * 0.08, 0, -s * 3,
+        0, 0, 0, 1, 0,
+      ]);
+      return Skia.ImageFilter.MakeColorFilter(matrix, null);
+    },
+    'anime-clean'
+  );
+}
+
+/** Compression cleanup: soften block noise, then restore usable edge contrast. */
+export async function applyArtifactCleanup(
+  uri: string,
+  strength: number
+): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  const denoised = await applyDenoise(uri, s * 0.55);
+  return applyUnsharpMask(denoised.uri, s * 0.35, 0.8);
+}
+
+/** Line-art mode for scans, manga panels, UI screenshots, and text-heavy images. */
+export async function applyLineArtCleanup(
+  uri: string,
+  strength: number
+): Promise<ProcessedImage> {
+  const s = Math.min(Math.max(strength, 0), 1);
+  const edged = await applyAcutance(uri, s);
+  return applyImageFilter(
+    edged.uri,
+    () => {
+      const c = 1 + s * 0.22;
+      const o = -s * 10;
+      const matrix = Skia.ColorFilter.MakeMatrix([
+        c, 0, 0, 0, o,
+        0, c, 0, 0, o,
+        0, 0, c, 0, o,
+        0, 0, 0, 1, 0,
+      ]);
+      return Skia.ImageFilter.MakeColorFilter(matrix, null);
+    },
+    'line-art'
+  );
+}
+
 export { FilterMode, TileMode };
