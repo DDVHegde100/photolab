@@ -280,3 +280,4 @@ This project targets **SDK 54**, compatible with the current **Expo Go** app fro
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+\n\n---\n\n**Author:** [Dhruv Hegde](https://github.com/DDVHegde100) · CS @ University of Michigan\n
